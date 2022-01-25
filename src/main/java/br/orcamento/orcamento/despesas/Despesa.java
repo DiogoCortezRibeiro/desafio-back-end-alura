@@ -1,41 +1,26 @@
 package br.orcamento.orcamento.despesas;
 
-import java.math.BigDecimal;
-import java.util.Date;
-
 import javax.persistence.Entity;
-import javax.persistence.GeneratedValue;
-import javax.persistence.GenerationType;
-import javax.persistence.Id;
+import javax.persistence.OneToOne;
 import javax.persistence.Table;
+import br.orcamento.orcamento.base.BaseEntity;
+import br.orcamento.orcamento.categoria.Categoria;
 
 @Entity
 @Table(name = "despesa")
-public class Despesa {
+public class Despesa extends BaseEntity{
 	
-	@Id
-	@GeneratedValue(strategy=GenerationType.IDENTITY)
-	private Integer id;
-	private String descricao;
-	private BigDecimal valor;
-	private Date data;
+	@OneToOne
+	private Categoria categoria;
 	
 	public Despesa() {}
 
-	public Integer getId() {
-		return id;
+	public Categoria getCategoria() {
+		return categoria;
 	}
 
-	public String getDescricao() {
-		return descricao;
-	}
-
-	public BigDecimal getValor() {
-		return valor;
-	}
-
-	public Date getData() {
-		return data;
+	public void setCategoria(Categoria categoria) {
+		this.categoria = categoria;
 	}
 	
 }

@@ -2,25 +2,27 @@ package br.orcamento.orcamento.despesas;
 
 import java.util.Date;
 import java.util.List;
-
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
-import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.PutMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
+import br.orcamento.orcamento.base.BaseController;
+import br.orcamento.orcamento.categoria.CategoriaRepository;
 
 @RestController
 @RequestMapping("/despesa")
-public class DespesaController {
+public class DespesaController extends BaseController<Despesa, DespesaRepository> {
 	
 	@Autowired
 	private DespesaRepository despesaRepository;
+	
+	@Autowired
+	private CategoriaRepository categoriaRepository;
 	
 	@PostMapping
 	public ResponseEntity<HttpStatus> cadastrarDespesa(@RequestBody Despesa novaDespesa)
@@ -30,13 +32,16 @@ public class DespesaController {
 			return new ResponseEntity<HttpStatus>(HttpStatus.BAD_REQUEST);
 		}
 		
+		if(novaDespesa.getCategoria() ==  null) {
+			novaDespesa.setCategoria(categoriaRepository.findByDescricao("Outras"));
+		}
+		
 		if(jaExisteDescricao(novaDespesa.getDescricao(), novaDespesa.getData()))
 		{
 			return new ResponseEntity<HttpStatus>(HttpStatus.BAD_REQUEST);
 		}
 		
 		this.despesaRepository.save(novaDespesa);
-		
 		return new ResponseEntity<HttpStatus>(HttpStatus.CREATED);
 	}
 	
@@ -45,42 +50,19 @@ public class DespesaController {
 		return despesa == null ? false : true;
 	}
 	
-	@GetMapping
-	public List<Despesa> listaDespesas()
+	@GetMapping("/buscarPorDescricao/{descricao}")
+	public Despesa buscarPorDescricao(@PathVariable("descricao") String descricao)
 	{
-		return this.despesaRepository.findAll();
+		Despesa despesa = null;
+		despesa = despesaRepository.findByDescricao(descricao);
+		return despesa;
 	}
 	
-	@GetMapping("/{id}")
-	public Despesa listaDespesaPorId(@PathVariable("id") Integer id)
+	@GetMapping("/{ano}/{mes}")
+	public List<Despesa> getReceitasPorMes(@PathVariable("ano") String ano, @PathVariable("mes") String mes)
 	{
-		return this.despesaRepository.findById(id).get();
-	}
-	
-	@PutMapping("/{id}")
-	public ResponseEntity<HttpStatus> atualizaDespesa(@PathVariable("id") Integer id, @RequestBody Despesa despesa)
-	{
-		if(despesa.getDescricao() == null || despesa.getData() == null || despesa.getValor() == null)
-		{
-			return new ResponseEntity<HttpStatus>(HttpStatus.BAD_REQUEST);
-		}
-		
-		this.despesaRepository.deleteById(id);
-		this.despesaRepository.save(despesa);
-		
-		return new ResponseEntity<HttpStatus>(HttpStatus.OK);
-	};
-	
-	@DeleteMapping("/{id}")
-	public ResponseEntity<HttpStatus> deletarDespesa(@PathVariable("id") Integer id)
-	{
-		Despesa despesa = this.despesaRepository.findById(id).get();
-		if(despesa != null)
-		{
-			this.despesaRepository.deleteById(id);
-			return new ResponseEntity<HttpStatus>(HttpStatus.OK);
-		}
-		
-		return new ResponseEntity<HttpStatus>(HttpStatus.BAD_REQUEST);
+		List<Despesa> despesas = null;
+		despesas = despesaRepository.buscaPorMes(ano, mes);
+		return despesas;
 	}
 }
